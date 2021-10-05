@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Models
 {
@@ -109,13 +111,33 @@ namespace Models
 
             if (!string.IsNullOrEmpty(this.Nome) && !string.IsNullOrEmpty(this.CPF) && !string.IsNullOrEmpty(this.Email))
             {
-                SqlCommand cmd = new SqlCommand("UPDATE Clientes SET nome=@nome, CPF=@CPF, email=@email WHERE id=@id", conn);
-                cmd.Parameters.Add(new SqlParameter("@id", System.Data.SqlDbType.Int) { Value = this.Id });
-                cmd.Parameters.Add(new SqlParameter("@nome", System.Data.SqlDbType.VarChar, 200) { Value = this.Nome });
-                cmd.Parameters.Add(new SqlParameter("@CPF", System.Data.SqlDbType.VarChar, 14) { Value = this.CPF });
-                cmd.Parameters.Add(new SqlParameter("@email", System.Data.SqlDbType.VarChar, 100) { Value = this.Email });
+                var emailValid = IsValidEmail(this.Email);
 
-                cmd.ExecuteNonQuery();
+                if (emailValid)
+                {
+                    var CPFFormatted = Convert.ToInt64(Regex.Replace(this.CPF, "[^0-9a-zA-Z]+", ""));
+                    var cpfValid = Valida.Cpf(CPFFormatted);
+
+                    if (cpfValid)
+                    {
+                        SqlCommand cmd = new SqlCommand("UPDATE Clientes SET nome=@nome, CPF=@CPF, email=@email WHERE id=@id", conn);
+                        cmd.Parameters.Add(new SqlParameter("@id", System.Data.SqlDbType.Int) { Value = this.Id });
+                        cmd.Parameters.Add(new SqlParameter("@nome", System.Data.SqlDbType.VarChar, 200) { Value = this.Nome });
+                        cmd.Parameters.Add(new SqlParameter("@CPF", System.Data.SqlDbType.VarChar, 14) { Value = this.CPF });
+                        cmd.Parameters.Add(new SqlParameter("@email", System.Data.SqlDbType.VarChar, 100) { Value = this.Email });
+
+                        cmd.ExecuteNonQuery();
+                    }
+                    else
+                    {
+                        throw new Exception("CPF Inválido");
+                    }
+
+                }
+                else
+                {
+                    throw new Exception("Email Inválido");
+                }
 
             }
             else
@@ -141,6 +163,21 @@ namespace Models
 
             return true;
         }
+
+        private bool IsValidEmail(string email)
+        {
+            try
+            {
+                var addr = new System.Net.Mail.MailAddress(email);
+                return addr.Address == email;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+
         #endregion
     }
 }
