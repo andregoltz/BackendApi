@@ -112,7 +112,7 @@ namespace Models
                 SqlCommand cmd = new SqlCommand("UPDATE Clientes SET nome=@nome, CPF=@CPF, email=@email WHERE id=@id", conn);
                 cmd.Parameters.Add(new SqlParameter("@id", System.Data.SqlDbType.Int) { Value = this.Id });
                 cmd.Parameters.Add(new SqlParameter("@nome", System.Data.SqlDbType.VarChar, 200) { Value = this.Nome });
-                cmd.Parameters.Add(new SqlParameter("@CPF", System.Data.SqlDbType.VarChar, 11) { Value = this.CPF });
+                cmd.Parameters.Add(new SqlParameter("@CPF", System.Data.SqlDbType.VarChar, 14) { Value = this.CPF });
                 cmd.Parameters.Add(new SqlParameter("@email", System.Data.SqlDbType.VarChar, 100) { Value = this.Email });
 
                 cmd.ExecuteNonQuery();
