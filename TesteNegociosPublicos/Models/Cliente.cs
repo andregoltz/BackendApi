@@ -75,14 +75,34 @@ namespace Models
 
                     if (!email)
                     {
-                        SqlCommand cmd = new SqlCommand("INSERT INTO Clientes(nome, CPF, email,deletado) values (@nome, @CPF, @email,@deletado)", conn);
+                        var emailValid = IsValidEmail(this.Email);
 
-                        cmd.Parameters.Add(new SqlParameter("@nome", System.Data.SqlDbType.VarChar, 200) { Value = this.Nome });
-                        cmd.Parameters.Add(new SqlParameter("@CPF", System.Data.SqlDbType.VarChar, 14) { Value = this.CPF });
-                        cmd.Parameters.Add(new SqlParameter("@email", System.Data.SqlDbType.VarChar, 100) { Value = this.Email.ToLower() });
-                        cmd.Parameters.Add(new SqlParameter("@deletado", System.Data.SqlDbType.Bit) { Value = 0 });
+                        if (emailValid)
+                        {
+                            var CPFFormatted = Convert.ToInt64(Regex.Replace(this.CPF, "[^0-9a-zA-Z]+", ""));
+                            var cpfValid = Valida.Cpf(CPFFormatted);
 
-                        cmd.ExecuteNonQuery();
+                            if (cpfValid)
+                            {
+                                SqlCommand cmd = new SqlCommand("INSERT INTO Clientes(nome, CPF, email,deletado) values (@nome, @CPF, @email,@deletado)", conn);
+
+                                cmd.Parameters.Add(new SqlParameter("@nome", System.Data.SqlDbType.VarChar, 200) { Value = this.Nome });
+                                cmd.Parameters.Add(new SqlParameter("@CPF", System.Data.SqlDbType.VarChar, 14) { Value = this.CPF });
+                                cmd.Parameters.Add(new SqlParameter("@email", System.Data.SqlDbType.VarChar, 100) { Value = this.Email.ToLower() });
+                                cmd.Parameters.Add(new SqlParameter("@deletado", System.Data.SqlDbType.Bit) { Value = 0 });
+
+                                cmd.ExecuteNonQuery();
+                            }
+                            else
+                            {
+                                throw new Exception("CPF Inválido");
+                            }
+
+                        }
+                        else
+                        {
+                            throw new Exception("Email Inválido");
+                        }
 
                     }
                     else
