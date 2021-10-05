@@ -21,7 +21,7 @@ namespace Models
             SqlConnection conn = new SqlConnection(Conexao.Dados);
             conn.Open();
 
-            SqlCommand cmd = new SqlCommand("select * FROM clientes", conn);
+            SqlCommand cmd = new SqlCommand("SELECT * FROM clientes WHERE deletado = 0", conn);
 
             SqlDataReader reader = cmd.ExecuteReader();
 
@@ -47,17 +47,59 @@ namespace Models
             SqlConnection conn = new SqlConnection(Conexao.Dados);
             conn.Open();
 
-            SqlCommand cmd = new SqlCommand("INSERT INTO Clientes(nome, CPF, email) values (@nome, @CPF, @email)", conn);
+            if (!string.IsNullOrEmpty(this.Nome) && !string.IsNullOrEmpty(this.CPF) && !string.IsNullOrEmpty(this.Email))
+            {
+                SqlCommand cmd1 = new SqlCommand("SELECT Id FROM Clientes Where CPF = @CPF and Deletado = 0", conn);
+                cmd1.Parameters.Add(new SqlParameter("@CPF", System.Data.SqlDbType.VarChar, 14) { Value = this.CPF });
 
-            cmd.Parameters.Add(new SqlParameter("@nome", System.Data.SqlDbType.VarChar, 200) { Value = this.Nome });
-            cmd.Parameters.Add(new SqlParameter("@CPF", System.Data.SqlDbType.VarChar, 11) { Value = this.CPF });
-            cmd.Parameters.Add(new SqlParameter("@email", System.Data.SqlDbType.VarChar, 100) { Value = this.Email });
+                SqlDataReader reader = cmd1.ExecuteReader();
 
-            cmd.ExecuteNonQuery();
+                var cpf = reader.Read();
 
-            conn.Close();
+                reader.Close();
+                cmd1.Dispose();
+
+                if (!cpf)
+                {
+                    SqlCommand cmd2 = new SqlCommand("SELECT Id FROM Clientes Where email = @email and Deletado = 0", conn);
+                    cmd2.Parameters.Add(new SqlParameter("@email", System.Data.SqlDbType.VarChar, 100) { Value = this.Email.ToLower() });
+
+                    SqlDataReader reader1 = cmd2.ExecuteReader();
+
+                    var email = reader1.Read();
+
+                    reader1.Close();
+                    cmd2.Dispose();
+
+                    if (!email)
+                    {
+                        SqlCommand cmd = new SqlCommand("INSERT INTO Clientes(nome, CPF, email,deletado) values (@nome, @CPF, @email,@deletado)", conn);
+
+                        cmd.Parameters.Add(new SqlParameter("@nome", System.Data.SqlDbType.VarChar, 200) { Value = this.Nome });
+                        cmd.Parameters.Add(new SqlParameter("@CPF", System.Data.SqlDbType.VarChar, 14) { Value = this.CPF });
+                        cmd.Parameters.Add(new SqlParameter("@email", System.Data.SqlDbType.VarChar, 100) { Value = this.Email.ToLower() });
+                        cmd.Parameters.Add(new SqlParameter("@deletado", System.Data.SqlDbType.Bit) { Value = 0 });
+
+                        cmd.ExecuteNonQuery();
+
+                    }
+                    else
+                    {
+                        throw new Exception("Já existe esse Email Cadastrado");
+                    }
+                }
+                else
+                {
+                    throw new Exception("Já existe esse CPF Cadastrado");
+                }
+
+            }
+            else
+            {
+                throw new Exception("Existem campos vazios");
+            }
             conn.Dispose();
-
+            conn.Close();
             return this;
         }
         public Cliente Atualizar()
@@ -65,17 +107,58 @@ namespace Models
             SqlConnection conn = new SqlConnection(Conexao.Dados);
             conn.Open();
 
-            SqlCommand cmd = new SqlCommand("UPDATE Clientes SET nome=@nome, CPF=@CPF, email=@email WHERE id=@id", conn);
-            cmd.Parameters.Add(new SqlParameter("@id", System.Data.SqlDbType.Int) { Value = this.Id });
-            cmd.Parameters.Add(new SqlParameter("@nome", System.Data.SqlDbType.VarChar, 200) { Value = this.Nome });
-            cmd.Parameters.Add(new SqlParameter("@CPF", System.Data.SqlDbType.VarChar, 11) { Value = this.CPF });
-            cmd.Parameters.Add(new SqlParameter("@email", System.Data.SqlDbType.VarChar, 100) { Value = this.Email });
+            if (!string.IsNullOrEmpty(this.Nome) && !string.IsNullOrEmpty(this.CPF) && !string.IsNullOrEmpty(this.Email))
+            {
+                SqlCommand cmd1 = new SqlCommand("SELECT Id FROM Clientes Where CPF = @CPF and Deletado = 0", conn);
+                cmd1.Parameters.Add(new SqlParameter("@CPF", System.Data.SqlDbType.VarChar, 14) { Value = this.CPF });
 
-            cmd.ExecuteNonQuery();
+                SqlDataReader reader = cmd1.ExecuteReader();
 
+                var cpf = reader.Read();
+
+                reader.Close();
+                cmd1.Dispose();
+
+                if (!cpf)
+                {
+                    SqlCommand cmd2 = new SqlCommand("SELECT Id FROM Clientes Where email = @email and Deletado = 0", conn);
+                    cmd2.Parameters.Add(new SqlParameter("@email", System.Data.SqlDbType.VarChar, 100) { Value = this.Email.ToLower() });
+
+                    SqlDataReader reader1 = cmd2.ExecuteReader();
+
+                    var email = reader1.Read();
+
+                    reader1.Close();
+                    cmd2.Dispose();
+
+                    if (!email)
+                    {
+                        SqlCommand cmd = new SqlCommand("UPDATE Clientes SET nome=@nome, CPF=@CPF, email=@email WHERE id=@id", conn);
+                        cmd.Parameters.Add(new SqlParameter("@id", System.Data.SqlDbType.Int) { Value = this.Id });
+                        cmd.Parameters.Add(new SqlParameter("@nome", System.Data.SqlDbType.VarChar, 200) { Value = this.Nome });
+                        cmd.Parameters.Add(new SqlParameter("@CPF", System.Data.SqlDbType.VarChar, 11) { Value = this.CPF });
+                        cmd.Parameters.Add(new SqlParameter("@email", System.Data.SqlDbType.VarChar, 100) { Value = this.Email });
+
+                        cmd.ExecuteNonQuery();
+
+                    }
+                    else
+                    {
+                        throw new Exception("Já existe esse Email Cadastrado");
+                    }
+                }
+                else
+                {
+                    throw new Exception("Já existe esse CPF Cadastrado");
+                }
+
+            }
+            else
+            {
+                throw new Exception("Existem campos vazios");
+            }
             conn.Close();
             conn.Dispose();
-
             return this;
         }
         public static bool Excluir(int id)
@@ -83,8 +166,8 @@ namespace Models
             SqlConnection conn = new SqlConnection(Conexao.Dados);
             conn.Open();
 
-            SqlCommand cmd = new SqlCommand("DELETE FROM Clientes WHERE id=@id", conn);
-            cmd.Parameters.Add(new SqlParameter("@id", System.Data.SqlDbType.Int) { Value = id});
+            SqlCommand cmd = new SqlCommand("UPDATE Clientes SET deletado = 1 WHERE id=@id", conn);
+            cmd.Parameters.Add(new SqlParameter("@id", System.Data.SqlDbType.Int) { Value = id });
 
             cmd.ExecuteNonQuery();
 

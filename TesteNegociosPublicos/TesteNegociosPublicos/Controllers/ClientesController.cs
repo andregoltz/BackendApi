@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
 using Models;
 using System.Collections.Generic;
 
@@ -9,14 +10,12 @@ namespace TesteNegociosPublicos.Controllers
     public class ClientesController : ControllerBase
     {
         [HttpGet]
-        [Route("lista")]
         public List<Cliente> Index()
         {
             return Cliente.Todos();
         }
 
         [HttpPost]
-        [Route("criar")]
         public Cliente Criar([FromBody] Cliente cliente)
         {
             return cliente.Salvar();
